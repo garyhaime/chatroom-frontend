@@ -1,0 +1,15 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-chatroomfrontend-dev-87ca8-authRole",
+      "UnauthRoleArn": "arn:aws:iam::356507924974:role/amplify-chatroomfrontend-dev-87ca8-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::356507924974:role/amplify-chatroomfrontend-dev-87ca8-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-chatroomfrontend-dev-87ca8-deployment",
+      "UnauthRoleName": "amplify-chatroomfrontend-dev-87ca8-unauthRole",
+      "StackName": "amplify-chatroomfrontend-dev-87ca8",
+      "StackId": "arn:aws:cloudformation:us-east-1:356507924974:stack/amplify-chatroomfrontend-dev-87ca8/6528d550-7d3c-11f0-aa68-12fe27b9bf1d",
+      "AmplifyAppId": "d2v1ga5mq8ijez"
+    }
+  }
+}

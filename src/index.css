@@ -1,0 +1,78 @@
+/* In src/index.css */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f0f2f5;
+}
+
+.container {
+  display: flex;
+  height: 100vh;
+}
+.participants-bar {
+  width: 250px;
+  background-color: #e6e6e6;
+  padding: 20px;
+  border-right: 1px solid #ccc;
+  box-sizing: border-box;
+}
+.chat-window {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+.messages-list {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.message-bubble {
+  max-width: 60%;
+  padding: 10px 15px;
+  border-radius: 18px;
+  margin-bottom: 10px;
+  word-wrap: break-word;
+}
+.message-bubble p {
+  margin: 0;
+}
+.message-bubble.sent {
+  background-color: #0084ff;
+  color: white;
+  align-self: flex-end;
+}
+.message-bubble.received {
+  background-color: #e4e6eb;
+  color: #050505;
+  align-self: flex-start;
+}
+.message-form {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #ccc;
+  background-color: #f0f0f0;
+}
+.message-form input {
+  flex-grow: 1;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 20px;
+  margin-right: 10px;
+  font-size: 1rem;
+}
+.message-form button {
+  background-color: #0084ff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 1rem;
+}
