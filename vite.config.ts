@@ -1,15 +1,20 @@
-// In frontend/vite.config.ts
-
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react"; // Use the regular plugin
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // This resolve alias is the crucial part for Amplify
   resolve: {
     alias: {
       "./runtimeConfig": "./runtimeConfig.browser",
     },
+  },
+  build: {
+    outDir: "build", // Amplify expects 'build' folder
+    sourcemap: true, // Optional: helps with debugging
+  },
+  server: {
+    port: 3000,
+    open: true, // Optional: opens browser automatically
   },
 });
