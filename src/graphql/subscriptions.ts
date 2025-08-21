@@ -8,7 +8,8 @@ type GeneratedSubscription<InputType, OutputType> = string & {
   __generatedSubscriptionOutput: OutputType;
 };
 
-export const onNewMessage = /* GraphQL */ `subscription OnNewMessage($chatroomId: ID!) {
+export const onNewMessage =
+  /* GraphQL */ `subscription OnNewMessage($chatroomId: ID!) {
   onNewMessage(chatroomId: $chatroomId) {
     id
     chatroomId
@@ -19,6 +20,19 @@ export const onNewMessage = /* GraphQL */ `subscription OnNewMessage($chatroomId
   }
 }
 ` as GeneratedSubscription<
-  APITypes.OnNewMessageSubscriptionVariables,
-  APITypes.OnNewMessageSubscription
->;
+    APITypes.OnNewMessageSubscriptionVariables,
+    APITypes.OnNewMessageSubscription
+  >;
+
+export const onMatchFound =
+  /* GraphQL */ `subscription OnMatchFound($userId: ID!) {
+  onMatchFound(userId: $userId) {
+    chatroomId
+    matchedUserId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+    APITypes.OnMatchFoundSubscriptionVariables,
+    APITypes.OnMatchFoundSubscription
+  >;

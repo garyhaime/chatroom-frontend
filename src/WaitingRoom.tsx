@@ -1,71 +1,148 @@
-import { useState } from "react";
-import "./WaitingRoom.css"; // Make sure you have this CSS file
+import { useState, useEffect } from "react";
+import { generateClient } from "aws-amplify/api";
+import {
+  joinWaitingRoom as joinWaitingRoomMutation,
+  leaveWaitingRoom as leaveWaitingRoomMutation,
+} from "./graphql/mutations";
+import { onMatchFound } from "./graphql/subscriptions";
 
-// Get the API URL from environment variables
-const WAITING_ROOM_API_URL = import.meta.env.VITE_WAITING_ROOM_API_URL;
+const client = generateClient();
 
+// Add this interface for the component props
 interface WaitingRoomProps {
-  // This function will be passed from the parent App component
-  onJoinSuccess: (userId: string) => void;
-  isWaiting: boolean;
-  statusMessage: string;
-  waitTime: number;
-  currentUserId: string | null;
-  onLeave: () => void;
+  setCurrentView: (view: "waiting" | "chat") => void;
+  setChatroomId: (id: string) => void;
+  setCurrentUserId: (id: string) => void;
 }
 
+// Use the interface in your function component
 function WaitingRoom({
-  onJoinSuccess,
-  isWaiting,
-  statusMessage,
-  waitTime,
-  currentUserId,
-  onLeave,
+  setCurrentView,
+  setChatroomId,
+  setCurrentUserId,
 }: WaitingRoomProps) {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleJoinClick = async () => {
-    setIsLoading(true);
+  const [waitingStatus, setWaitingStatus] = useState(
+    "Join the waiting room to find players"
+  );
+  const [waitTime, setWaitTime] = useState(0);
+  const [isWaiting, setIsWaiting] = useState(false);
+  const [currentUserId, setLocalCurrentUserId] = useState("");
+  // Waiting Room Functions using AppSync
+  const joinWaitingRoom = async () => {
     try {
-      const response = await fetch(`${WAITING_ROOM_API_URL}/join`, {
-        method: "POST",
+      setWaitingStatus("Joining waiting room...");
+      setIsWaiting(true);
+
+      // Generate a unique user ID
+      const userId = "user-" + Math.random().toString(36).substr(2, 9);
+      setLocalCurrentUserId(userId);
+      setCurrentUserId(userId);
+
+      // Use AppSync mutation instead of fetch
+      const response = await client.graphql({
+        query: joinWaitingRoomMutation,
+        variables: { userId },
       });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+
+      console.log("Join response:", response);
+
+      // Handle the response properly - check if it's a GraphQLResult
+      if ("data" in response && response.data?.joinWaitingRoom) {
+        setWaitingStatus("Waiting for other players...");
+        setWaitTime(0);
+
+        // If immediately matched (for testing)
+        if (response.data.joinWaitingRoom.chatroomId) {
+          setChatroomId(response.data.joinWaitingRoom.chatroomId);
+          setCurrentView("chat");
+        }
       }
-      const data: { userId: string } = await response.json();
-      // Notify the parent component that we have a user ID
-      onJoinSuccess(data.userId);
     } catch (error) {
       console.error("Error joining waiting room:", error);
-      // You could pass an error message back to the parent here
-    } finally {
-      setIsLoading(false);
+      setWaitingStatus("Failed to join waiting room. Please try again.");
+      setIsWaiting(false);
     }
+  };
+
+  const leaveWaitingRoom = async () => {
+    if (currentUserId) {
+      try {
+        await client.graphql({
+          query: leaveWaitingRoomMutation,
+          variables: { userId: currentUserId },
+        });
+      } catch (error) {
+        console.error("Error leaving waiting room:", error);
+      }
+    }
+    setIsWaiting(false);
+    setLocalCurrentUserId("");
+    setCurrentUserId("");
+    setWaitingStatus("Join the waiting room to find players");
+    setWaitTime(0);
+  };
+
+  // Use AppSync subscription for real-time matching instead of polling
+  useEffect(() => {
+    if (!currentUserId || !isWaiting) return;
+
+    const subscription = client
+      .graphql({
+        query: onMatchFound,
+        variables: { userId: currentUserId },
+      })
+      .subscribe({
+        next: ({ data }) => {
+          console.log("Match subscription data:", data);
+          if (data?.onMatchFound?.chatroomId) {
+            setChatroomId(data.onMatchFound.chatroomId);
+            setCurrentView("chat");
+          }
+        },
+        error: (error: any) => {
+          console.error("Match subscription error:", error);
+          // Fallback to polling if subscription fails - pass the userId
+          startPollingForMatch(currentUserId);
+        },
+      });
+
+    return () => subscription.unsubscribe();
+  }, [currentUserId, isWaiting]);
+
+  // Fallback polling function (optional) - now properly uses the userId parameter
+  const startPollingForMatch = (userId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        // You could implement a getWaitingStatus query here using the userId
+        console.log("Polling for match for user:", userId);
+        setWaitTime((prev) => prev + 1);
+      } catch (error) {
+        console.error("Error polling for match:", error);
+      }
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
   };
 
   return (
     <div className="waiting-room">
       <div className="waiting-room-content">
         <h2>🎮 Waiting Room</h2>
+
         {!isWaiting ? (
           <div className="join-section">
             <p>Find other players to chat with!</p>
-            <button
-              onClick={handleJoinClick}
-              className="join-button"
-              disabled={isLoading}
-            >
-              {isLoading ? "Joining..." : "Join Waiting Room"}
+            <button onClick={joinWaitingRoom} className="join-button">
+              Join Waiting Room
             </button>
           </div>
         ) : (
           <div className="waiting-section">
             <div className="loading-spinner"></div>
-            <p className="status">{statusMessage}</p>
+            <p className="status">{waitingStatus}</p>
             <p className="wait-time">Waiting for {waitTime} seconds...</p>
             <p className="user-id">Your ID: {currentUserId}</p>
-            <button onClick={onLeave} className="leave-button">
+            <button onClick={leaveWaitingRoom} className="leave-button">
               Leave Waiting Room
             </button>
           </div>

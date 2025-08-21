@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { generateClient } from "aws-amplify/api";
+import { Amplify } from "aws-amplify";
 
 import { getMessages } from "./graphql/queries";
 import { onNewMessage } from "./graphql/subscriptions";
 import { sendMessage } from "./graphql/mutations";
+import {
+  joinWaitingRoom as joinWaitingRoomMutation,
+  leaveWaitingRoom as leaveWaitingRoomMutation,
+} from "./graphql/mutations";
+import { onMatchFound } from "./graphql/subscriptions";
+
 import type {
   GetMessagesQuery,
   OnNewMessageSubscription,
   SendMessageMutation,
+  JoinWaitingRoomMutation,
+  LeaveWaitingRoomMutation,
 } from "./API";
 
 type Message = {
@@ -17,12 +26,18 @@ type Message = {
   createdAt: string;
 };
 
-const client = generateClient();
+// Configure Amplify
+const awsConfig = {
+  aws_project_region: import.meta.env.VITE_AWS_REGION,
+  aws_appsync_graphqlEndpoint: import.meta.env.VITE_APPSYNC_ENDPOINT,
+  aws_appsync_region: import.meta.env.VITE_AWS_REGION,
+  aws_appsync_authenticationType: "API_KEY",
+  aws_appsync_apiKey: import.meta.env.VITE_APPSYNC_API_KEY,
+};
 
-// Waiting room API URL - you'll need to set this in your .env file
-const WAITING_ROOM_API_URL =
-  import.meta.env.VITE_WAITING_ROOM_API_URL ||
-  "https://your-waiting-room-api-url.amazonaws.com/prod";
+Amplify.configure(awsConfig);
+
+const client = generateClient();
 
 function App() {
   const [currentView, setCurrentView] = useState<"waiting" | "chat">("waiting");
@@ -38,27 +53,32 @@ function App() {
   const [waitTime, setWaitTime] = useState(0);
   const [isWaiting, setIsWaiting] = useState(false);
 
-  // Waiting Room Functions
+  // Waiting Room Functions using AppSync
   const joinWaitingRoom = async () => {
     try {
       setWaitingStatus("Joining waiting room...");
       setIsWaiting(true);
 
-      const response = await fetch(`${WAITING_ROOM_API_URL}/join`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      // Use AppSync mutation instead of fetch
+      const response = await client.graphql<JoinWaitingRoomMutation>({
+        query: joinWaitingRoomMutation,
+        variables: {},
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      console.log("Join response:", response);
 
-      const data = await response.json();
-      setCurrentUserId(data.userId);
-      setWaitingStatus("Waiting for other players...");
-      setWaitTime(0);
+      if ("data" in response && response.data?.joinWaitingRoom) {
+        const userId = response.data.joinWaitingRoom.userId;
+        setCurrentUserId(userId);
+        setWaitingStatus("Waiting for other players...");
+        setWaitTime(0);
+
+        // If immediately matched (for testing)
+        if (response.data.joinWaitingRoom.chatroomId) {
+          setChatroomId(response.data.joinWaitingRoom.chatroomId);
+          setCurrentView("chat");
+        }
+      }
     } catch (error) {
       console.error("Error joining waiting room:", error);
       setWaitingStatus("Failed to join waiting room. Please try again.");
@@ -69,8 +89,9 @@ function App() {
   const leaveWaitingRoom = async () => {
     if (currentUserId) {
       try {
-        await fetch(`${WAITING_ROOM_API_URL}/leave?userId=${currentUserId}`, {
-          method: "DELETE",
+        await client.graphql<LeaveWaitingRoomMutation>({
+          query: leaveWaitingRoomMutation,
+          variables: { userId: currentUserId },
         });
       } catch (error) {
         console.error("Error leaving waiting room:", error);
@@ -82,42 +103,45 @@ function App() {
     setWaitTime(0);
   };
 
-  const startPollingForMatch = (userId: string) => {
-    const pollInterval = setInterval(async () => {
-      try {
-        const statusResponse = await fetch(
-          `${WAITING_ROOM_API_URL}/status?userId=${userId}`
-        );
-        const statusData = await statusResponse.json();
-
-        if (statusData.status === "matched" && statusData.chatroomId) {
-          clearInterval(pollInterval);
-          setChatroomId(statusData.chatroomId);
-          setCurrentView("chat");
-        }
-
-        setWaitTime((prev) => prev + 1);
-      } catch (error) {
-        console.error("Error polling for match:", error);
-      }
-    }, 3000);
-
-    return () => clearInterval(pollInterval);
-  };
-
+  // Use AppSync subscription for real-time matching
   useEffect(() => {
-    let pollCleanup: (() => void) | undefined;
+    if (!currentUserId || !isWaiting) return;
 
-    if (currentUserId && isWaiting) {
-      pollCleanup = startPollingForMatch(currentUserId);
-    }
+    const subscription = client
+      .graphql({
+        query: onMatchFound,
+        variables: { userId: currentUserId },
+      })
+      .subscribe({
+        next: ({ data }) => {
+          console.log("Match subscription data:", data);
+          if (data?.onMatchFound?.chatroomId) {
+            setChatroomId(data.onMatchFound.chatroomId);
+            setCurrentView("chat");
+          }
+        },
+        error: (error: any) => {
+          console.error("Match subscription error:", error);
+        },
+      });
 
-    return () => {
-      if (pollCleanup) pollCleanup();
-    };
+    return () => subscription.unsubscribe();
   }, [currentUserId, isWaiting]);
 
-  // Chat Functions (your existing code)
+  // // Fallback polling function (optional)
+  // const startPollingForMatch = () => {
+  //   const pollInterval = setInterval(async () => {
+  //     try {
+  //       setWaitTime((prev) => prev + 1);
+  //     } catch (error) {
+  //       console.error("Error polling for match:", error);
+  //     }
+  //   }, 3000);
+
+  //   return () => clearInterval(pollInterval);
+  // };
+
+  // Chat Functions
   useEffect(() => {
     if (currentView !== "chat" || !chatroomId) return;
 
