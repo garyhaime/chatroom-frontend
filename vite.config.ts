@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react"; // Use the regular plugin
+import react from "@vitejs/plugin-react";
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -10,11 +9,13 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "build", // Amplify expects 'build' folder
-    sourcemap: true, // Optional: helps with debugging
+    outDir: "build",
+    sourcemap: false,
+    minify: 'esbuild',
+    target: 'es2020',
+    chunkSizeWarningLimit: 1000
   },
   server: {
     port: 3000,
-    open: true, // Optional: opens browser automatically
   },
 });
