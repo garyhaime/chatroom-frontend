@@ -18,9 +18,9 @@ type Message = {
 
 const sendMessage = /* GraphQL */ `
   mutation SendMessage(
-    $chatroomId: String!
+    $chatroomId: ID!
     $text: String!
-    $senderId: String!
+    $senderId:ID!
   ) {
     sendMessage(chatroomId: $chatroomId, text: $text, senderId: $senderId) {
       id
