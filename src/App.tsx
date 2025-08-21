@@ -3,6 +3,7 @@ import { generateClient } from "aws-amplify/api";
 
 import { getMessages } from "./graphql/queries";
 import { onNewMessage } from "./graphql/subscriptions";
+import { sendMessage } from "./graphql/mutations";
 import type {
   GetMessagesQuery,
   OnNewMessageSubscription,
@@ -15,23 +16,6 @@ type Message = {
   senderId: string;
   createdAt: string;
 };
-
-const sendMessage = /* GraphQL */ `
-  mutation SendMessage(
-    $chatroomId: ID!
-    $text: String!
-    $senderId:ID!
-  ) {
-    sendMessage(chatroomId: $chatroomId, text: $text, senderId: $senderId) {
-      id
-      chatroomId
-      text
-      senderId
-      createdAt
-      __typename
-    }
-  }
-`;
 
 const CHATROOM_ID = "c5c0a5e8-5b12-4f30-8a1a-0d674b884941";
 const CURRENT_USER_ID = "user-12345";
