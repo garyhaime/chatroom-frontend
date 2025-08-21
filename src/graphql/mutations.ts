@@ -24,8 +24,8 @@ export const sendMessage =
     APITypes.SendMessageMutation
   >;
 export const joinWaitingRoom = /* GraphQL */ `
-  mutation JoinWaitingRoom($userId: ID!) {
-    joinWaitingRoom(userId: $userId) {
+  mutation JoinWaitingRoom {
+    joinWaitingRoom {
       userId
       chatroomId
       status

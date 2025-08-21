@@ -42,11 +42,6 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     fetchData();
   }, [chatroomId]);
 
-  // Effect to subscribe to new messages
-  // And change this to just track if we're in a chat:
-  //const [isInChat, setIsInChat] = useState(false);
-
-  // Simplified subscription effect without currentView:
   useEffect(() => {
     if (!chatroomId) return; // Only run if we have a chatroom
 

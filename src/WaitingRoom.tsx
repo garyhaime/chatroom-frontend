@@ -33,21 +33,19 @@ function WaitingRoom({
       setWaitingStatus("Joining waiting room...");
       setIsWaiting(true);
 
-      // Generate a unique user ID
-      const userId = "user-" + Math.random().toString(36).substr(2, 9);
-      setLocalCurrentUserId(userId);
-      setCurrentUserId(userId);
-
-      // Use AppSync mutation instead of fetch
+      // Use AppSync mutation - server will generate the userId
       const response = await client.graphql({
         query: joinWaitingRoomMutation,
-        variables: { userId },
+        variables: {}, // No arguments needed
       });
 
       console.log("Join response:", response);
 
       // Handle the response properly - check if it's a GraphQLResult
       if ("data" in response && response.data?.joinWaitingRoom) {
+        const userId = response.data.joinWaitingRoom.userId;
+        setLocalCurrentUserId(userId);
+        setCurrentUserId(userId);
         setWaitingStatus("Waiting for other players...");
         setWaitTime(0);
 
