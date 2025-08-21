@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { generateClient } from "aws-amplify/api";
-import { Amplify } from "aws-amplify";
-import awsConfig from "./aws-exports";
 
-Amplify.configure(awsConfig);
 import { getMessages } from "./graphql/queries";
 import { onNewMessage } from "./graphql/subscriptions";
 import type {

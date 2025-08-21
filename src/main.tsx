@@ -7,12 +7,13 @@ import "./index.css"; // We will add styles here later
 
 // --- Start of Amplify Configuration ---
 import { Amplify } from "aws-amplify";
-import config from "./amplifyconfiguration.json";
 
-Amplify.configure(config);
-// --- End of Amplify Configuration ---
+import awsConfig from "./aws-exports";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+
+Amplify.configure(awsConfig);
+console.log("Amplify config being used:", awsConfig);
+-ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
