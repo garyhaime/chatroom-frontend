@@ -7,4 +7,7 @@ declare const awsConfig: {
   aws_appsync_apiKey?: string;
 };
 
+console.log("AWS Config:", awsConfig);
+console.log("AppSync Endpoint:", awsConfig.aws_appsync_graphqlEndpoint);
+
 export default awsConfig;
