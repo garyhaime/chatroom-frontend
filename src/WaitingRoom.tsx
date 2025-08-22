@@ -88,19 +88,19 @@ function WaitingRoom({
     const subscription = client
       .graphql({
         query: onMatchFound,
-        variables: { userId: currentUserId },
+        variables: { userId: "" },
       })
       .subscribe({
         next: (payload) => {
-          // LOG THE ENTIRE PAYLOAD TO SEE THE FULL STRUCTURE
           console.log(
             "🎯 SUBSCRIPTION PAYLOAD RECEIVED:",
             JSON.stringify(payload, null, 2)
           );
 
-          const data = payload.data; // Extract the data object
+          const data = payload.data;
 
-          if (data?.onMatchFound?.chatroomId) {
+          // MANUAL FILTERING: Check if this match is for the current user
+          if (data?.onMatchFound?.matchedUserId === currentUserId) {
             console.log(
               "🚀 Switching to chatroom:",
               data.onMatchFound.chatroomId
@@ -108,8 +108,9 @@ function WaitingRoom({
             setChatroomId(data.onMatchFound.chatroomId);
             setCurrentView("chat");
           } else {
-            console.warn(
-              "Received subscription data, but it was missing 'onMatchFound' or 'chatroomId'."
+            console.log(
+              "📩 Ignoring match for other user:",
+              data?.onMatchFound?.matchedUserId
             );
           }
         },
@@ -118,10 +119,7 @@ function WaitingRoom({
         },
       });
 
-    return () => {
-      console.log("Cleaning up match subscription.");
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [currentUserId, isWaiting, setCurrentView, setChatroomId]);
 
   return (

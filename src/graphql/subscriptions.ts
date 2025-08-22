@@ -24,15 +24,14 @@ export const onNewMessage =
     APITypes.OnNewMessageSubscription
   >;
 
-export const onMatchFound =
-  /* GraphQL */ `subscription OnMatchFound($userId: ID!) {
-  onMatchFound(userId: $userId) {
+export const onMatchFound = /* GraphQL */ `subscription OnMatchFound {
+  onMatchFound {
     chatroomId
     matchedUserId
     __typename
   }
 }
 ` as GeneratedSubscription<
-    APITypes.OnMatchFoundSubscriptionVariables,
-    APITypes.OnMatchFoundSubscription
-  >;
+  APITypes.OnMatchFoundSubscriptionVariables,
+  APITypes.OnMatchFoundSubscription
+>;
