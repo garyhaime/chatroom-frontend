@@ -76,17 +76,30 @@ function WaitingRoom({
   };
 
   useEffect(() => {
-    console.log("ONMATCHFOUND");
-    if (!currentUserId || !isWaiting) return;
+    console.log("ONMATCHFOUND useEffect is running.");
+    if (!currentUserId || !isWaiting) {
+      console.log(
+        "Skipping subscription setup (userId or isWaiting is falsy)."
+      );
+      return;
+    }
 
+    console.log(`Setting up subscription for user: ${currentUserId}`);
     const subscription = client
       .graphql({
         query: onMatchFound,
         variables: { userId: currentUserId },
       })
       .subscribe({
-        next: ({ data }) => {
-          console.log("🎯 SUBSCRIPTION DATA RECEIVED:", data);
+        next: (payload) => {
+          // LOG THE ENTIRE PAYLOAD TO SEE THE FULL STRUCTURE
+          console.log(
+            "🎯 SUBSCRIPTION PAYLOAD RECEIVED:",
+            JSON.stringify(payload, null, 2)
+          );
+
+          const data = payload.data; // Extract the data object
+
           if (data?.onMatchFound?.chatroomId) {
             console.log(
               "🚀 Switching to chatroom:",
@@ -94,6 +107,10 @@ function WaitingRoom({
             );
             setChatroomId(data.onMatchFound.chatroomId);
             setCurrentView("chat");
+          } else {
+            console.warn(
+              "Received subscription data, but it was missing 'onMatchFound' or 'chatroomId'."
+            );
           }
         },
         error: (error: any) => {
@@ -101,8 +118,11 @@ function WaitingRoom({
         },
       });
 
-    return () => subscription.unsubscribe();
-  }, [currentUserId, isWaiting]);
+    return () => {
+      console.log("Cleaning up match subscription.");
+      subscription.unsubscribe();
+    };
+  }, [currentUserId, isWaiting, setCurrentView, setChatroomId]);
 
   return (
     <div className="waiting-room">
