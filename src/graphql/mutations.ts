@@ -34,8 +34,8 @@ export const joinWaitingRoom = /* GraphQL */ `
 `;
 
 export const leaveWaitingRoom = /* GraphQL */ `
-  mutation LeaveWaitingRoom($userId: ID!) {
-    leaveWaitingRoom(userId: $userId) {
+  mutation LeaveWaitingRoom {
+    leaveWaitingRoom {
       success
     }
   }

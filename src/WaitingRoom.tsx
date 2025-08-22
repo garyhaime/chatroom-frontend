@@ -27,6 +27,13 @@ function WaitingRoom({
   const [waitTime, setWaitTime] = useState(0);
   const [isWaiting, setIsWaiting] = useState(false);
   const [currentUserId, setLocalCurrentUserId] = useState("");
+  console.log(
+    "📍 WaitingRoom rendered. isWaiting:",
+    isWaiting,
+    "currentUserId:",
+    currentUserId
+  );
+
   // Waiting Room Functions using AppSync
   const joinWaitingRoom = async () => {
     try {
@@ -67,7 +74,6 @@ function WaitingRoom({
       try {
         await client.graphql({
           query: leaveWaitingRoomMutation,
-          variables: { userId: currentUserId },
         });
       } catch (error) {
         console.error("Error leaving waiting room:", error);
@@ -82,10 +88,19 @@ function WaitingRoom({
 
   // Use AppSync subscription for real-time matching instead of polling
   useEffect(() => {
-    console.log("onmatchfound codeblock triggered");
-    if (!currentUserId || !isWaiting) return;
+    console.log(
+      "📍 useEffect triggered. currentUserId:",
+      currentUserId,
+      "isWaiting:",
+      isWaiting
+    );
 
-    console.log("🔄 Setting up match subscription for user:", currentUserId);
+    if (!currentUserId || !isWaiting) {
+      console.log("❌ Skipping subscription: missing userId or not waiting");
+      return;
+    }
+
+    console.log("🔄 Setting up subscription for user:", currentUserId);
 
     const subscription = client
       .graphql({
@@ -93,19 +108,14 @@ function WaitingRoom({
       })
       .subscribe({
         next: ({ data }) => {
-          console.log(
-            "🎯 MATCH SUBSCRIPTION RECEIVED:",
-            JSON.stringify(data, null, 2)
-          );
-          if (data?.onMatchFound?.matchedUserId === currentUserId) {
+          console.log("🎯 SUBSCRIPTION DATA RECEIVED:", data);
+          if (data?.onMatchFound?.chatroomId) {
             console.log(
               "🚀 Switching to chatroom:",
               data.onMatchFound.chatroomId
             );
             setChatroomId(data.onMatchFound.chatroomId);
             setCurrentView("chat");
-          } else {
-            console.log("❌ No chatroomId in subscription data");
           }
         },
         error: (error: any) => {
@@ -113,19 +123,14 @@ function WaitingRoom({
         },
       });
 
-    // Log after a moment to check if subscription is active
-    setTimeout(() => {
-      console.log(
-        "📡 Subscription should be active now for user:",
-        currentUserId
-      );
-    }, 1000);
+    console.log("✅ Subscription created");
 
     return () => {
       console.log("🧹 Cleaning up subscription");
       subscription.unsubscribe();
     };
   }, [currentUserId, isWaiting]);
+
   // Fallback polling function (optional) - now properly uses the userId parameter
   // const startPollingForMatch = (userId: string) => {
   //   const pollInterval = setInterval(async () => {

@@ -91,7 +91,6 @@ function App() {
       try {
         await client.graphql<LeaveWaitingRoomMutation>({
           query: leaveWaitingRoomMutation,
-          variables: { userId: currentUserId },
         });
       } catch (error) {
         console.error("Error leaving waiting room:", error);
@@ -110,7 +109,6 @@ function App() {
     const subscription = client
       .graphql({
         query: onMatchFound,
-        variables: { userId: currentUserId },
       })
       .subscribe({
         next: ({ data }) => {
