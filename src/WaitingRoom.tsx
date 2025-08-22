@@ -81,8 +81,8 @@ function WaitingRoom({
   };
 
   // Use AppSync subscription for real-time matching instead of polling
-  // In WaitingRoom.tsx - add detailed logging
   useEffect(() => {
+    console.log("onmatchfound codeblock triggered");
     if (!currentUserId || !isWaiting) return;
 
     console.log("🔄 Setting up match subscription for user:", currentUserId);
