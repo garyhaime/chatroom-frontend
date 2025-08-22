@@ -90,7 +90,6 @@ function WaitingRoom({
     const subscription = client
       .graphql({
         query: onMatchFound,
-        variables: { userId: currentUserId },
       })
       .subscribe({
         next: ({ data }) => {
@@ -98,7 +97,7 @@ function WaitingRoom({
             "🎯 MATCH SUBSCRIPTION RECEIVED:",
             JSON.stringify(data, null, 2)
           );
-          if (data?.onMatchFound?.chatroomId) {
+          if (data?.onMatchFound?.matchedUserId === currentUserId) {
             console.log(
               "🚀 Switching to chatroom:",
               data.onMatchFound.chatroomId
@@ -128,19 +127,19 @@ function WaitingRoom({
     };
   }, [currentUserId, isWaiting]);
   // Fallback polling function (optional) - now properly uses the userId parameter
-  const startPollingForMatch = (userId: string) => {
-    const pollInterval = setInterval(async () => {
-      try {
-        // You could implement a getWaitingStatus query here using the userId
-        console.log("Polling for match for user:", userId);
-        setWaitTime((prev) => prev + 1);
-      } catch (error) {
-        console.error("Error polling for match:", error);
-      }
-    }, 3000);
+  // const startPollingForMatch = (userId: string) => {
+  //   const pollInterval = setInterval(async () => {
+  //     try {
+  //       // You could implement a getWaitingStatus query here using the userId
+  //       console.log("Polling for match for user:", userId);
+  //       setWaitTime((prev) => prev + 1);
+  //     } catch (error) {
+  //       console.error("Error polling for match:", error);
+  //     }
+  //   }, 3000);
 
-    return () => clearInterval(pollInterval);
-  };
+  //   return () => clearInterval(pollInterval);
+  // };
 
   return (
     <div className="waiting-room">
