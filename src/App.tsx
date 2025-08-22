@@ -1,4 +1,4 @@
-import "./amplifyConfig";
+import { Amplify } from "aws-amplify";
 import { useState, useEffect } from "react";
 import { generateClient } from "aws-amplify/api";
 
@@ -16,6 +16,19 @@ type Message = {
   senderId: string;
   createdAt: string;
 };
+
+const config = {
+  API: {
+    GraphQL: {
+      endpoint: import.meta.env.VITE_APPSYNC_ENDPOINT,
+      region: import.meta.env.VITE_AWS_REGION,
+      defaultAuthMode: "apiKey" as const,
+      apiKey: import.meta.env.VITE_APPSYNC_API_KEY,
+    },
+  },
+};
+console.log(config.API.GraphQL.endpoint);
+Amplify.configure(config);
 
 const client = generateClient();
 
