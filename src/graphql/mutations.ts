@@ -41,23 +41,3 @@ export const leaveWaitingRoom = /* GraphQL */ `
   }
 `;
 
-// Add to your graphql/queries.ts:
-export const getWaitingStatus = /* GraphQL */ `
-  query GetWaitingStatus($userId: ID!) {
-    getWaitingStatus(userId: $userId) {
-      status
-      chatroomId
-      waitTime
-    }
-  }
-`;
-
-// Add to your graphql/subscriptions.ts:
-export const onMatchFound = /* GraphQL */ `
-  subscription OnMatchFound($userId: ID!) {
-    onMatchFound(userId: $userId) {
-      chatroomId
-      matchedUserId
-    }
-  }
-`;

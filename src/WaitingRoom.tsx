@@ -82,6 +82,7 @@ function WaitingRoom({
     const subscription = client
       .graphql({
         query: onMatchFound,
+        variables: { userId: currentUserId },
       })
       .subscribe({
         next: ({ data }) => {
