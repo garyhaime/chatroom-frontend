@@ -1,7 +1,15 @@
+const awsConfig = {
+  aws_project_region: import.meta.env.VITE_AWS_REGION,
+  aws_appsync_graphqlEndpoint: import.meta.env.VITE_APPSYNC_ENDPOINT,
+  aws_appsync_region: import.meta.env.VITE_AWS_REGION,
+  aws_appsync_authenticationType: "API_KEY",
+  aws_appsync_apiKey: import.meta.env.VITE_APPSYNC_API_KEY,
+};
 import { Amplify } from "aws-amplify";
+Amplify.configure(awsConfig);
+
 import { useState, useEffect } from "react";
 import { generateClient } from "aws-amplify/api";
-
 import WaitingRoom from "./WaitingRoom"; // Import WaitingRoom component
 import ChatRoom from "./ChatRoom"; // Import ChatRoom component
 
@@ -16,19 +24,6 @@ type Message = {
   senderId: string;
   createdAt: string;
 };
-
-const config = {
-  API: {
-    GraphQL: {
-      endpoint: import.meta.env.VITE_APPSYNC_ENDPOINT,
-      region: import.meta.env.VITE_AWS_REGION,
-      defaultAuthMode: "apiKey" as const,
-      apiKey: import.meta.env.VITE_APPSYNC_API_KEY,
-    },
-  },
-};
-console.log(config.API.GraphQL.endpoint);
-Amplify.configure(config);
 
 const client = generateClient();
 
