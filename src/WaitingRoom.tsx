@@ -8,14 +8,12 @@ import { onMatchFound } from "./graphql/subscriptions";
 
 const client = generateClient();
 
-// Add this interface for the component props
 interface WaitingRoomProps {
   setCurrentView: (view: "waiting" | "chat") => void;
   setChatroomId: (id: string) => void;
   setCurrentUserId: (id: string) => void;
 }
 
-// Use the interface in your function component
 function WaitingRoom({
   setCurrentView,
   setChatroomId,
@@ -27,28 +25,19 @@ function WaitingRoom({
   const [waitTime, setWaitTime] = useState(0);
   const [isWaiting, setIsWaiting] = useState(false);
   const [currentUserId, setLocalCurrentUserId] = useState("");
-  console.log(
-    "📍 WaitingRoom rendered. isWaiting:",
-    isWaiting,
-    "currentUserId:",
-    currentUserId
-  );
 
-  // Waiting Room Functions using AppSync
   const joinWaitingRoom = async () => {
     try {
       setWaitingStatus("Joining waiting room...");
       setIsWaiting(true);
 
-      // Use AppSync mutation - server will generate the userId
       const response = await client.graphql({
         query: joinWaitingRoomMutation,
-        variables: {}, // No arguments needed
+        variables: {},
       });
 
       console.log("Join response:", response);
 
-      // Handle the response properly - check if it's a GraphQLResult
       if ("data" in response && response.data?.joinWaitingRoom) {
         const userId = response.data.joinWaitingRoom.userId;
         setLocalCurrentUserId(userId);
@@ -56,7 +45,6 @@ function WaitingRoom({
         setWaitingStatus("Waiting for other players...");
         setWaitTime(0);
 
-        // If immediately matched (for testing)
         if (response.data.joinWaitingRoom.chatroomId) {
           setChatroomId(response.data.joinWaitingRoom.chatroomId);
           setCurrentView("chat");
@@ -74,6 +62,7 @@ function WaitingRoom({
       try {
         await client.graphql({
           query: leaveWaitingRoomMutation,
+          variables: { userId: currentUserId },
         });
       } catch (error) {
         console.error("Error leaving waiting room:", error);
@@ -86,21 +75,8 @@ function WaitingRoom({
     setWaitTime(0);
   };
 
-  // Use AppSync subscription for real-time matching instead of polling
   useEffect(() => {
-    console.log(
-      "📍 useEffect triggered. currentUserId:",
-      currentUserId,
-      "isWaiting:",
-      isWaiting
-    );
-
-    if (!currentUserId || !isWaiting) {
-      console.log("❌ Skipping subscription: missing userId or not waiting");
-      return;
-    }
-
-    console.log("🔄 Setting up subscription for user:", currentUserId);
+    if (!currentUserId || !isWaiting) return;
 
     const subscription = client
       .graphql({
@@ -123,28 +99,8 @@ function WaitingRoom({
         },
       });
 
-    console.log("✅ Subscription created");
-
-    return () => {
-      console.log("🧹 Cleaning up subscription");
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [currentUserId, isWaiting]);
-
-  // Fallback polling function (optional) - now properly uses the userId parameter
-  // const startPollingForMatch = (userId: string) => {
-  //   const pollInterval = setInterval(async () => {
-  //     try {
-  //       // You could implement a getWaitingStatus query here using the userId
-  //       console.log("Polling for match for user:", userId);
-  //       setWaitTime((prev) => prev + 1);
-  //     } catch (error) {
-  //       console.error("Error polling for match:", error);
-  //     }
-  //   }, 3000);
-
-  //   return () => clearInterval(pollInterval);
-  // };
 
   return (
     <div className="waiting-room">
