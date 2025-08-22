@@ -76,6 +76,7 @@ function WaitingRoom({
   };
 
   useEffect(() => {
+    console.log("ONMATCHFOUND");
     if (!currentUserId || !isWaiting) return;
 
     const subscription = client
