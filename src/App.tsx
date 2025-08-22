@@ -1,6 +1,7 @@
+import "./amplifyConfig";
 import { useState, useEffect } from "react";
 import { generateClient } from "aws-amplify/api";
-import { Amplify } from "aws-amplify";
+
 import WaitingRoom from "./WaitingRoom"; // Import WaitingRoom component
 import ChatRoom from "./ChatRoom"; // Import ChatRoom component
 
@@ -15,17 +16,6 @@ type Message = {
   senderId: string;
   createdAt: string;
 };
-
-// Configure Amplify
-const awsConfig = {
-  aws_project_region: import.meta.env.VITE_AWS_REGION,
-  aws_appsync_graphqlEndpoint: import.meta.env.VITE_APPSYNC_ENDPOINT,
-  aws_appsync_region: import.meta.env.VITE_AWS_REGION,
-  aws_appsync_authenticationType: "API_KEY",
-  aws_appsync_apiKey: import.meta.env.VITE_APPSYNC_API_KEY,
-};
-
-Amplify.configure(awsConfig);
 
 const client = generateClient();
 
