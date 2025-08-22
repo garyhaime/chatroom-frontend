@@ -16,7 +16,6 @@ export const onNewMessage =
     text
     senderId
     createdAt
-    __typename
   }
 }
 ` as GeneratedSubscription<
@@ -28,7 +27,6 @@ export const onMatchFound = /* GraphQL */ `subscription OnMatchFound($userId: ID
   onMatchFound(userId: $userId) {
     chatroomId
     matchedUserId
-    __typename
   }
 }
 ` as GeneratedSubscription<

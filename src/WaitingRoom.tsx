@@ -75,16 +75,11 @@ function WaitingRoom({
     setWaitTime(0);
   };
 
+  // Add this to check if subscription is properly set up
   useEffect(() => {
-    console.log("ONMATCHFOUND useEffect is running.");
-    if (!currentUserId || !isWaiting) {
-      console.log(
-        "Skipping subscription setup (userId or isWaiting is falsy)."
-      );
-      return;
-    }
+    console.log("Subscription variables:", { userId: currentUserId });
+    console.log("Is waiting:", isWaiting);
 
-    console.log(`Setting up subscription for user: ${currentUserId}`);
     const subscription = client
       .graphql({
         query: onMatchFound,
@@ -92,35 +87,58 @@ function WaitingRoom({
       })
       .subscribe({
         next: (payload) => {
-          console.log(
-            "🎯 SUBSCRIPTION PAYLOAD RECEIVED:",
-            JSON.stringify(payload, null, 2)
-          );
+          console.log("Raw payload:", payload);
+          console.log("Has data:", !!payload.data);
+          console.log("Has onMatchFound:", !!payload.data?.onMatchFound);
 
-          const data = payload.data;
-
-          // MANUAL FILTERING: Check if this match is for the current user
-          if (data?.onMatchFound?.matchedUserId === currentUserId) {
-            console.log(
-              "🚀 Switching to chatroom:",
-              data.onMatchFound.chatroomId
-            );
-            setChatroomId(data.onMatchFound.chatroomId);
-            setCurrentView("chat");
-          } else {
-            console.log(
-              "📩 Ignoring match for other user:",
-              data?.onMatchFound?.matchedUserId
-            );
+          if (payload.data?.onMatchFound) {
+            // Handle match
           }
         },
-        error: (error: any) => {
-          console.error("❌ Subscription error:", error);
+        error: (error) => {
+          console.error("Subscription error details:", error);
         },
       });
 
     return () => subscription.unsubscribe();
-  }, [currentUserId, isWaiting, setCurrentView, setChatroomId]);
+  }, [currentUserId, isWaiting]);
+
+  // useEffect(() => {
+  //   console.log("ONMATCHFOUND useEffect is running.");
+  //   if (!currentUserId || !isWaiting) {
+  //     console.log(
+  //       "Skipping subscription setup (userId or isWaiting is falsy)."
+  //     );
+  //     return;
+  //   }
+
+  //   console.log(`Setting up subscription for user: ${currentUserId}`);
+  //   const subscription = client
+  //     .graphql({
+  //       query: onMatchFound,
+  //       variables: { userId: currentUserId },
+  //     })
+  //     .subscribe({
+  //       next: (payload) => {
+  //         console.log("🎯 MATCH FOUND:", payload);
+
+  //         // The subscription should already be filtered by userId
+  //         if (payload.data?.onMatchFound) {
+  //           console.log(
+  //             "🚀 Switching to chatroom:",
+  //             payload.data.onMatchFound.chatroomId
+  //           );
+  //           setChatroomId(payload.data.onMatchFound.chatroomId);
+  //           setCurrentView("chat");
+  //         }
+  //       },
+  //       error: (error) => {
+  //         console.error("❌ Subscription error:", error);
+  //       },
+  //     });
+
+  //   return () => subscription.unsubscribe();
+  // }, [currentUserId, isWaiting, setCurrentView, setChatroomId]);
 
   return (
     <div className="waiting-room">
