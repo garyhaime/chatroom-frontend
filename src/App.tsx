@@ -1,27 +1,10 @@
-import { Amplify } from "aws-amplify";
+import "./amplifyConfig";
 import { generateClient } from "aws-amplify/api";
-const awsConfig = {
-  aws_project_region: import.meta.env.VITE_AWS_REGION,
-  aws_appsync_graphqlEndpoint: import.meta.env.VITE_APPSYNC_ENDPOINT,
-  aws_appsync_region: import.meta.env.VITE_AWS_REGION,
-  aws_appsync_authenticationType: "API_KEY",
-  aws_appsync_apiKey: import.meta.env.VITE_APPSYNC_API_KEY,
-};
-console.log("Environment variables:", {
-  region: import.meta.env.VITE_AWS_REGION,
-  endpoint: import.meta.env.VITE_APPSYNC_ENDPOINT,
-  apiKey: import.meta.env.VITE_APPSYNC_API_KEY ? "SET" : "MISSING",
-});
-Amplify.configure(awsConfig);
-
 import { useState, useEffect } from "react";
-
 import WaitingRoom from "./WaitingRoom"; // Import WaitingRoom component
 import ChatRoom from "./ChatRoom"; // Import ChatRoom component
-
 import { getMessages } from "./graphql/queries";
 import { onNewMessage } from "./graphql/subscriptions";
-
 import type { GetMessagesQuery, OnNewMessageSubscription } from "./API";
 
 type Message = {
