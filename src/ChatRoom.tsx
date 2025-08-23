@@ -1,13 +1,13 @@
 // src/components/ChatRoom.tsx
 
 import React, { useState, useEffect } from "react";
-import { generateClient } from "aws-amplify/api";
+
 import { getMessages } from "./graphql/queries";
 import { onNewMessage } from "./graphql/subscriptions";
 import { sendMessage } from "./graphql/mutations";
 import type { Message, OnNewMessageSubscription } from "./API";
+import { client } from "./amplifyConfig";
 
-const client = generateClient();
 
 interface ChatRoomProps {
   chatroomId: string;
