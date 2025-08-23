@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { generateClient } from "aws-amplify/api";
 import {
   joinWaitingRoom as joinWaitingRoomMutation,
   leaveWaitingRoom as leaveWaitingRoomMutation,
 } from "./graphql/mutations";
 import { onMatchFound } from "./graphql/subscriptions";
-
-const client = generateClient();
+import { client } from "./amplifyConfig";
 
 interface WaitingRoomProps {
   setCurrentView: (view: "waiting" | "chat") => void;

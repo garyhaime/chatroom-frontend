@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import WaitingRoom from "./WaitingRoom"; // Import WaitingRoom component
 import ChatRoom from "./ChatRoom"; // Import ChatRoom component
-
 
 type Message = {
   id: string;
@@ -19,8 +18,8 @@ function App() {
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
 
-  messages
-  messageText
+  messages;
+  messageText;
   const handleLeaveChat = () => {
     setCurrentView("waiting");
     setChatroomId("");
