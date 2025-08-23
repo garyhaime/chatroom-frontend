@@ -18,6 +18,7 @@ function App() {
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
 
+  loading;
   messages;
   messageText;
   const handleLeaveChat = () => {
@@ -36,10 +37,6 @@ function App() {
         setCurrentUserId={setCurrentUserId}
       />
     );
-  }
-
-  if (loading) {
-    return <div>Loading messages...</div>;
   }
 
   return (

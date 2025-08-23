@@ -83,7 +83,7 @@ function WaitingRoom({
         query: onMatchFound,
         variables: { userId: currentUserId },
       })
-      .subscribe({
+      .subscribe({F
         next: (payload) => {
           console.log("Raw payload:", payload);
           console.log("Has data:", !!payload.data);
