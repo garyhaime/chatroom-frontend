@@ -41,3 +41,12 @@ export const leaveWaitingRoom = /* GraphQL */ `
   }
 `;
 
+export const createMatch = /* GraphQL */ `
+  mutation CreateMatch($userId: ID!, $chatroomId: ID!) {
+    createMatch(userId: $userId, chatroomId: $chatroomId) {
+      chatroomId
+      matchedUserId
+      __typename
+    }
+  }
+`;

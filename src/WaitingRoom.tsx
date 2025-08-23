@@ -92,7 +92,11 @@ function WaitingRoom({
           console.log("Has onMatchFound:", !!payload.data?.onMatchFound);
 
           if (payload.data?.onMatchFound) {
-            // Handle match
+            const chatroomId = payload.data.onMatchFound.chatroomId;
+            console.log("🚀 Match found! Switching to chatroom:", chatroomId);
+
+            setChatroomId(chatroomId);
+            setCurrentView("chat");
           }
         },
         error: (error) => {
