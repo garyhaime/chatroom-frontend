@@ -1,12 +1,16 @@
 import { Amplify } from "aws-amplify";
+import { generateClient } from "aws-amplify/api";
 
-const awsConfig = {
-  aws_project_region: import.meta.env.VITE_AWS_REGION,
-  aws_appsync_graphqlEndpoint: import.meta.env.VITE_APPSYNC_ENDPOINT,
-  aws_appsync_region: import.meta.env.VITE_AWS_REGION,
-  aws_appsync_authenticationType: "API_KEY",
-  aws_appsync_apiKey: import.meta.env.VITE_APPSYNC_API_KEY,
-};
+Amplify.configure({
+  API: {
+    GraphQL: {
+      endpoint: import.meta.env.VITE_APPSYNC_ENDPOINT,
+      defaultAuthMode: "apiKey",
+      apiKey: import.meta.env.VITE_APPSYNC_API_KEY,
+      region: import.meta.env.VITE_AWS_REGION,
+    },
+  },
+});
 
 console.log("Environment variables:", {
   region: import.meta.env.VITE_AWS_REGION,
@@ -14,6 +18,4 @@ console.log("Environment variables:", {
   apiKey: import.meta.env.VITE_APPSYNC_API_KEY ? "SET" : "MISSING",
 });
 
-Amplify.configure(awsConfig);
-
-export { Amplify };
+export const client = generateClient();

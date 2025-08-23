@@ -1,11 +1,10 @@
-import { Amplify } from "aws-amplify";
-import { generateClient } from "aws-amplify/api";
 import { useState, useEffect } from "react";
 import WaitingRoom from "./WaitingRoom"; // Import WaitingRoom component
 import ChatRoom from "./ChatRoom"; // Import ChatRoom component
 import { getMessages } from "./graphql/queries";
 import { onNewMessage } from "./graphql/subscriptions";
 import type { GetMessagesQuery, OnNewMessageSubscription } from "./API";
+import {client} from "./amplifyConfig"
 
 type Message = {
   id: string;
@@ -13,19 +12,6 @@ type Message = {
   senderId: string;
   createdAt: string;
 };
-
-Amplify.configure({
-  API: {
-    GraphQL: {
-      endpoint: import.meta.env.VITE_APPSYNC_ENDPOINT,
-      defaultAuthMode: "apiKey",
-      apiKey: import.meta.env.VITE_APPSYNC_API_KEY,
-      region: import.meta.env.VITE_AWS_REGION,
-    },
-  },
-});
-
-const client = generateClient();
 
 function App() {
   const [currentView, setCurrentView] = useState<"waiting" | "chat">("waiting");
