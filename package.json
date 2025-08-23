@@ -8,7 +8,6 @@
   },
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/generate-aws-exports.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
