@@ -1,4 +1,4 @@
-import "./amplifyConfig";
+import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/api";
 import { useState, useEffect } from "react";
 import WaitingRoom from "./WaitingRoom"; // Import WaitingRoom component
@@ -13,6 +13,17 @@ type Message = {
   senderId: string;
   createdAt: string;
 };
+
+Amplify.configure({
+  API: {
+    GraphQL: {
+      endpoint: import.meta.env.VITE_APPSYNC_ENDPOINT,
+      defaultAuthMode: "apiKey",
+      apiKey: import.meta.env.VITE_APPSYNC_API_KEY,
+      region: import.meta.env.VITE_AWS_REGION, // Optional
+    },
+  },
+});
 
 const client = generateClient();
 
