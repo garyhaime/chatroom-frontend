@@ -1,6 +1,7 @@
 import { useState } from "react";
 import WaitingRoom from "./WaitingRoom"; // Import WaitingRoom component
 import ChatRoom from "./ChatRoom"; // Import ChatRoom component
+import styles from "./App.module.css";
 
 type Message = {
   id: string;
@@ -31,20 +32,24 @@ function App() {
 
   if (currentView === "waiting") {
     return (
-      <WaitingRoom
-        setCurrentView={setCurrentView}
-        setChatroomId={setChatroomId}
-        setCurrentUserId={setCurrentUserId}
-      />
+      <div className={styles.appContainer}>
+        <WaitingRoom
+          setCurrentView={setCurrentView}
+          setChatroomId={setChatroomId}
+          setCurrentUserId={setCurrentUserId}
+        />
+      </div>
     );
   }
 
   return (
-    <ChatRoom
-      chatroomId={chatroomId}
-      currentUserId={currentUserId}
-      onLeaveChat={handleLeaveChat}
-    />
+    <div className={styles.appContainer}>
+      <ChatRoom
+        chatroomId={chatroomId}
+        currentUserId={currentUserId}
+        onLeaveChat={handleLeaveChat}
+      />
+    </div>
   );
 }
 

@@ -5,6 +5,7 @@ import {
 } from "./graphql/mutations";
 import { onMatchFound } from "./graphql/subscriptions";
 import { client } from "./amplifyConfig";
+import styles from "./WaitingRoom.module.css";
 
 interface WaitingRoomProps {
   setCurrentView: (view: "waiting" | "chat") => void;
@@ -73,7 +74,6 @@ function WaitingRoom({
     setWaitTime(0);
   };
 
-  // Add this to check if subscription is properly set up
   useEffect(() => {
     console.log("Subscription variables:", { userId: currentUserId });
     console.log("Is waiting:", isWaiting);
@@ -105,62 +105,27 @@ function WaitingRoom({
     return () => subscription.unsubscribe();
   }, [currentUserId, isWaiting]);
 
-  // useEffect(() => {
-  //   console.log("ONMATCHFOUND useEffect is running.");
-  //   if (!currentUserId || !isWaiting) {
-  //     console.log(
-  //       "Skipping subscription setup (userId or isWaiting is falsy)."
-  //     );
-  //     return;
-  //   }
-
-  //   console.log(`Setting up subscription for user: ${currentUserId}`);
-  //   const subscription = client
-  //     .graphql({
-  //       query: onMatchFound,
-  //       variables: { userId: currentUserId },
-  //     })
-  //     .subscribe({
-  //       next: (payload) => {
-  //         console.log("🎯 MATCH FOUND:", payload);
-
-  //         // The subscription should already be filtered by userId
-  //         if (payload.data?.onMatchFound) {
-  //           console.log(
-  //             "🚀 Switching to chatroom:",
-  //             payload.data.onMatchFound.chatroomId
-  //           );
-  //           setChatroomId(payload.data.onMatchFound.chatroomId);
-  //           setCurrentView("chat");
-  //         }
-  //       },
-  //       error: (error) => {
-  //         console.error("❌ Subscription error:", error);
-  //       },
-  //     });
-
-  //   return () => subscription.unsubscribe();
-  // }, [currentUserId, isWaiting, setCurrentView, setChatroomId]);
-
   return (
-    <div className="waiting-room">
-      <div className="waiting-room-content">
-        <h2>🎮 Waiting Room</h2>
+    <div className={styles.waitingRoom}>
+      <div className={styles.waitingRoomContent}>
+        <h2 className={styles.title}>🎮 Waiting Room</h2>
 
         {!isWaiting ? (
-          <div className="join-section">
-            <p>Find other players to chat with!</p>
-            <button onClick={joinWaitingRoom} className="join-button">
+          <div className={styles.joinSection}>
+            <p className={styles.description}>
+              Find other players to chat with!
+            </p>
+            <button onClick={joinWaitingRoom} className={styles.joinButton}>
               Join Waiting Room
             </button>
           </div>
         ) : (
-          <div className="waiting-section">
-            <div className="loading-spinner"></div>
-            <p className="status">{waitingStatus}</p>
-            <p className="wait-time">Waiting for {waitTime} seconds...</p>
-            <p className="user-id">Your ID: {currentUserId}</p>
-            <button onClick={leaveWaitingRoom} className="leave-button">
+          <div className={styles.waitingSection}>
+            <div className={styles.loadingSpinner}></div>
+            <p className={styles.status}>{waitingStatus}</p>
+            <p className={styles.waitTime}>Waiting for {waitTime} seconds...</p>
+            <p className={styles.userId}>Your ID: {currentUserId}</p>
+            <button onClick={leaveWaitingRoom} className={styles.leaveButton}>
               Leave Waiting Room
             </button>
           </div>
