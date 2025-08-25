@@ -1,6 +1,6 @@
 // src/components/ChatRoom.tsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // ADDED: useRef
 import { getMessages } from "./graphql/queries";
 import { onNewMessage } from "./graphql/subscriptions";
 import { sendMessage } from "./graphql/mutations";
@@ -22,6 +22,9 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     Record<string, string>
   >({});
   const [userColors, setUserColors] = useState<Record<string, string>>({});
+
+  // ADDED: Create a ref for the messages container
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Generate a consistent color for each user based on their ID
   const generateUserColor = (userId: string): string => {
@@ -146,6 +149,16 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     return () => subscription.unsubscribe();
   }, [chatroomId]);
 
+  // ADDED: Effect to smoothly scroll to the bottom when new messages arrive
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [messages]);
+
   const handleSendMessage = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (messageText.trim() === "" || !currentUserId) return;
@@ -188,7 +201,8 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
         </div>
       </div>
 
-      <div className={styles.messagesContainer}>
+      {/* ADDED: Attach the ref to the messages container div */}
+      <div ref={messagesContainerRef} className={styles.messagesContainer}>
         {messages.map((message) => {
           const senderName = participantNames[message.senderId] || "Unknown";
           const senderColor = userColors[message.senderId] || "#666";
