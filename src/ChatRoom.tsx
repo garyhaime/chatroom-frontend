@@ -5,7 +5,7 @@ import { sendMessage } from "./graphql/mutations";
 import type { Message, OnNewMessageSubscription } from "./API";
 import { client } from "./amplifyConfig";
 import styles from "./ChatRoom.module.css";
-import VoteModal from "./components/VoteModal"; // Import the new modal component
+import VoteModal from "./components/VoteModal"; // Import the modal component
 
 interface ChatRoomProps {
   chatroomId: string;
@@ -23,7 +23,6 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
   const [userColors, setUserColors] = useState<Record<string, string>>({});
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // --- NEW: State for timer and game-over logic ---
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
   const [isGameOver, setIsGameOver] = useState(false);
 
@@ -50,6 +49,7 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     return colors[Math.abs(hash) % colors.length];
   };
 
+  // =============== MODIFIED FUNCTION START ===============
   // Generate friendly names for participants
   const generateFriendlyNames = (messages: Message[]) => {
     const namesMap: Record<string, string> = {};
@@ -64,21 +64,9 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
 
         if (message.senderId === currentUserId) {
           namesMap[message.senderId] = "You";
-        } else if (message.senderId.startsWith("ai-")) {
-          const aiNames = [
-            "Alex",
-            "Jordan",
-            "Taylor",
-            "Casey",
-            "Morgan",
-            "Riley",
-            "Jamie",
-            "Quinn",
-          ];
-          const randomName =
-            aiNames[Math.floor(Math.random() * aiNames.length)];
-          namesMap[message.senderId] = randomName;
         } else {
+          // This block now applies to BOTH the AI and other human players,
+          // making the AI indistinguishable by name.
           namesMap[message.senderId] = `Player ${playerCount++}`;
         }
       }
@@ -87,19 +75,18 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     setParticipantNames(namesMap);
     setUserColors(colorsMap);
   };
+  // =============== MODIFIED FUNCTION END ===============
 
-  // --- NEW: Timer effect ---
+  // Timer effect
   useEffect(() => {
     if (timeLeft <= 0) {
       setIsGameOver(true);
       return;
     }
-
     const timerId = setInterval(() => {
       setTimeLeft((prevTime) => prevTime - 1);
     }, 1000);
-
-    return () => clearInterval(timerId); // Cleanup interval on component unmount
+    return () => clearInterval(timerId);
   }, [timeLeft]);
 
   // Effect to fetch initial messages
@@ -128,7 +115,6 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
   // Effect for new message subscriptions
   useEffect(() => {
     if (!chatroomId) return;
-
     const observable = client.graphql({
       query: onNewMessage,
       variables: { chatroomId: chatroomId },
@@ -138,7 +124,6 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
         error: (error: any) => void;
       }) => { unsubscribe: () => void };
     };
-
     const subscription = observable.subscribe({
       next: ({ data }) => {
         const newMessage = data.onNewMessage;
@@ -152,7 +137,6 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
       },
       error: (error) => console.warn("Subscription error:", error),
     });
-
     return () => subscription.unsubscribe();
   }, [chatroomId]);
 
@@ -170,7 +154,6 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
   const handleSendMessage = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (messageText.trim() === "" || !currentUserId || isGameOver) return;
-
     try {
       await client.graphql({
         query: sendMessage,
@@ -186,18 +169,15 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     }
   };
 
-  // --- NEW: Handle the voting submission ---
+  // Handle the voting submission
   const handleVote = (votedUserId: string) => {
     const votedParticipant = participantNames[votedUserId] || "Unknown";
     const isAi = votedUserId.startsWith("ai-");
-
     alert(
       `You voted for ${votedParticipant}. This was ${
         isAi ? "correct!" : "incorrect."
       }`
     );
-    // Here, you could add more complex logic, like showing a results screen,
-    // storing the result, or navigating the user back to the waiting room.
   };
 
   // Format timestamp for display
@@ -208,7 +188,7 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     });
   };
 
-  // --- NEW: Format the timer display ---
+  // Format the timer display
   const formatTimer = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -284,12 +264,9 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
           type="submit"
           className={styles.sendButton}
           disabled={isGameOver}
-        >
-          {/* The send icon is a CSS ::after element, so no text is needed here */}
-        </button>
+        ></button>
       </form>
 
-      {/* --- NEW: Conditionally render the voting modal --- */}
       {isGameOver && (
         <VoteModal participants={otherParticipants} onVote={handleVote} />
       )}
