@@ -1,12 +1,11 @@
-// src/components/ChatRoom.tsx
-
-import React, { useState, useEffect, useRef } from "react"; // ADDED: useRef
+import React, { useState, useEffect, useRef } from "react";
 import { getMessages } from "./graphql/queries";
 import { onNewMessage } from "./graphql/subscriptions";
 import { sendMessage } from "./graphql/mutations";
 import type { Message, OnNewMessageSubscription } from "./API";
 import { client } from "./amplifyConfig";
 import styles from "./ChatRoom.module.css";
+import VoteModal from "./components/VoteModal"; // Import the new modal component
 
 interface ChatRoomProps {
   chatroomId: string;
@@ -22,9 +21,11 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     Record<string, string>
   >({});
   const [userColors, setUserColors] = useState<Record<string, string>>({});
-
-  // ADDED: Create a ref for the messages container
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // --- NEW: State for timer and game-over logic ---
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  const [isGameOver, setIsGameOver] = useState(false);
 
   // Generate a consistent color for each user based on their ID
   const generateUserColor = (userId: string): string => {
@@ -42,13 +43,10 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
       "#9C27B0",
       "#3F51B5",
     ];
-
-    // Simple hash function for consistent color assignment
     let hash = 0;
     for (let i = 0; i < userId.length; i++) {
       hash = userId.charCodeAt(i) + ((hash << 5) - hash);
     }
-
     return colors[Math.abs(hash) % colors.length];
   };
 
@@ -59,18 +57,14 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     const seenUserIds = new Set<string>();
     let playerCount = 1;
 
-    // Collect all unique user IDs from messages
     messages.forEach((message) => {
       if (message.senderId && !seenUserIds.has(message.senderId)) {
         seenUserIds.add(message.senderId);
-
-        // Generate color for each participant
         colorsMap[message.senderId] = generateUserColor(message.senderId);
 
         if (message.senderId === currentUserId) {
           namesMap[message.senderId] = "You";
         } else if (message.senderId.startsWith("ai-")) {
-          // Disguise AI as a normal player with a random name
           const aiNames = [
             "Alex",
             "Jordan",
@@ -85,7 +79,6 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
             aiNames[Math.floor(Math.random() * aiNames.length)];
           namesMap[message.senderId] = randomName;
         } else {
-          // Assign friendly names to other human players
           namesMap[message.senderId] = `Player ${playerCount++}`;
         }
       }
@@ -94,6 +87,20 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     setParticipantNames(namesMap);
     setUserColors(colorsMap);
   };
+
+  // --- NEW: Timer effect ---
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      setIsGameOver(true);
+      return;
+    }
+
+    const timerId = setInterval(() => {
+      setTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
+
+    return () => clearInterval(timerId); // Cleanup interval on component unmount
+  }, [timeLeft]);
 
   // Effect to fetch initial messages
   useEffect(() => {
@@ -118,6 +125,7 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     fetchData();
   }, [chatroomId, currentUserId]);
 
+  // Effect for new message subscriptions
   useEffect(() => {
     if (!chatroomId) return;
 
@@ -137,7 +145,6 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
         if (newMessage) {
           setMessages((prev) => {
             const updatedMessages = [...prev, newMessage as Message];
-            // Update names when new participants appear
             generateFriendlyNames(updatedMessages);
             return updatedMessages;
           });
@@ -149,7 +156,7 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     return () => subscription.unsubscribe();
   }, [chatroomId]);
 
-  // ADDED: Effect to smoothly scroll to the bottom when new messages arrive
+  // Effect to scroll to the bottom when new messages arrive
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTo({
@@ -159,9 +166,10 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     }
   }, [messages]);
 
+  // Handle sending a message
   const handleSendMessage = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (messageText.trim() === "" || !currentUserId) return;
+    if (messageText.trim() === "" || !currentUserId || isGameOver) return;
 
     try {
       await client.graphql({
@@ -178,6 +186,20 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     }
   };
 
+  // --- NEW: Handle the voting submission ---
+  const handleVote = (votedUserId: string) => {
+    const votedParticipant = participantNames[votedUserId] || "Unknown";
+    const isAi = votedUserId.startsWith("ai-");
+
+    alert(
+      `You voted for ${votedParticipant}. This was ${
+        isAi ? "correct!" : "incorrect."
+      }`
+    );
+    // Here, you could add more complex logic, like showing a results screen,
+    // storing the result, or navigating the user back to the waiting room.
+  };
+
   // Format timestamp for display
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString([], {
@@ -186,22 +208,37 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
     });
   };
 
+  // --- NEW: Format the timer display ---
+  const formatTimer = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+  };
+
   if (loading) {
     return <div className="loading-chat">Loading chat...</div>;
   }
+
+  // Create a list of other participants for the voting modal
+  const otherParticipants = Object.entries(participantNames)
+    .filter(([id]) => id !== currentUserId)
+    .reduce((acc, [id, name]) => {
+      acc[id] = name;
+      return acc;
+    }, {} as Record<string, string>);
+
   return (
     <div className={styles.chatContainer}>
       <div className={styles.chatHeader}>
         <button onClick={onLeaveChat} className={styles.backButton}>
           ← Leave Chat
         </button>
-        <h2>Chat Room</h2>
+        <h2>Time Left: {formatTimer(timeLeft)}</h2>
         <div className={styles.participantCount}>
           {Object.keys(participantNames).length} participants
         </div>
       </div>
 
-      {/* ADDED: Attach the ref to the messages container div */}
       <div ref={messagesContainerRef} className={styles.messagesContainer}>
         {messages.map((message) => {
           const senderName = participantNames[message.senderId] || "Unknown";
@@ -239,13 +276,23 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
           type="text"
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
-          placeholder="Type a message..."
+          placeholder={isGameOver ? "Time's up!" : "Type a message..."}
           className={styles.messageInput}
+          disabled={isGameOver}
         />
-        <button type="submit" className={styles.sendButton}>
-          Send
+        <button
+          type="submit"
+          className={styles.sendButton}
+          disabled={isGameOver}
+        >
+          {/* The send icon is a CSS ::after element, so no text is needed here */}
         </button>
       </form>
+
+      {/* --- NEW: Conditionally render the voting modal --- */}
+      {isGameOver && (
+        <VoteModal participants={otherParticipants} onVote={handleVote} />
+      )}
     </div>
   );
 }
