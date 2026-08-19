@@ -27,6 +27,7 @@ function App() {
     setChatroomId("");
     setMessages([]);
     setMessageText("");
+    setCurrentUserId("");
     setLoading(true);
   };
 
@@ -45,6 +46,7 @@ function App() {
   return (
     <div className={styles.appContainer}>
       <ChatRoom
+        key={chatroomId}
         chatroomId={chatroomId}
         currentUserId={currentUserId}
         onLeaveChat={handleLeaveChat}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   joinWaitingRoom as joinWaitingRoomMutation,
   leaveWaitingRoom as leaveWaitingRoomMutation,
@@ -24,6 +24,7 @@ function WaitingRoom({
   const [waitTime, setWaitTime] = useState(0);
   const [isWaiting, setIsWaiting] = useState(false);
   const [currentUserId, setLocalCurrentUserId] = useState("");
+  const matchedRef = useRef(false);
 
   const joinWaitingRoom = async () => {
     try {
@@ -90,6 +91,9 @@ function WaitingRoom({
           console.log("Has onMatchFound:", !!payload.data?.onMatchFound);
 
           if (payload.data?.onMatchFound) {
+            if (matchedRef.current) return; // Ignore repeat/duplicate match notifications
+            matchedRef.current = true;
+
             const chatroomId = payload.data.onMatchFound.chatroomId;
             console.log("🚀 Match found! Switching to chatroom:", chatroomId);
 

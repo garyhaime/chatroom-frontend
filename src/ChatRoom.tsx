@@ -176,19 +176,16 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
         );
         
         setMessages((prev) => {
-          // Only update if there are new messages
-          if (loadedMessages.length > prev.length) {
-            // Merge messages, avoiding duplicates
-            const messageMap = new Map(prev.map(msg => [msg.id, msg]));
-            loadedMessages.forEach(msg => messageMap.set(msg.id, msg));
-            const updatedMessages = Array.from(messageMap.values())
-              .sort((a, b) => 
-                new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
-              );
-            generateFriendlyNames(updatedMessages);
-            return updatedMessages;
-          }
-          return prev;
+          // Authoritative replace, preserving any temporary optimistic messages
+          const optimistic = prev.filter((msg) => msg.id.startsWith("temp-"));
+          const messageMap = new Map(loadedMessages.map((msg) => [msg.id, msg]));
+          optimistic.forEach((msg) => messageMap.set(msg.id, msg));
+          const updatedMessages = Array.from(messageMap.values())
+            .sort((a, b) => 
+              new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+            );
+          generateFriendlyNames(updatedMessages);
+          return updatedMessages;
         });
       } catch (error) {
         console.error("Error polling messages:", error);
