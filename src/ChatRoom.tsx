@@ -55,52 +55,20 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
   const generateFriendlyNames = (messages: Message[]) => {
     const namesMap: Record<string, string> = {};
     const colorsMap: Record<string, string> = {};
-    const seenUserIds = new Set<string>();
-    const humanNames = [
-      "Sam",
-      "Chris",
-      "Pat",
-      "Drew",
-      "Avery",
-      "Blake",
-      "Cameron",
-      "Dakota",
-    ];
-    const aiNames = [
-      "Alex",
-      "Jordan",
-      "Taylor",
-      "Casey",
-      "Morgan",
-      "Riley",
-      "Jamie",
-      "Quinn",
-    ];
-    let humanNameIndex = 0;
-
-    // Helper to generate consistent index from user ID
-    const getConsistentIndex = (userId: string, arrayLength: number): number => {
-      let hash = 0;
-      for (let i = 0; i < userId.length; i++) {
-        hash = userId.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return Math.abs(hash) % arrayLength;
-    };
+    const allUserIds = new Set<string>([currentUserId]);
 
     messages.forEach((message) => {
-      if (message.senderId && !seenUserIds.has(message.senderId)) {
-        seenUserIds.add(message.senderId);
-        colorsMap[message.senderId] = generateUserColor(message.senderId);
-
-        if (message.senderId === currentUserId) {
-          namesMap[message.senderId] = "You";
-        } else if (message.senderId.startsWith("ai-")) {
-          const nameIndex = getConsistentIndex(message.senderId, aiNames.length);
-          namesMap[message.senderId] = aiNames[nameIndex];
-        } else {
-          namesMap[message.senderId] = humanNames[humanNameIndex++ % humanNames.length];
-        }
+      if (message.senderId) {
+        allUserIds.add(message.senderId);
       }
+    });
+
+    // Sort IDs so every client assigns the same Player number to the same person
+    const sortedUserIds = Array.from(allUserIds).sort();
+
+    sortedUserIds.forEach((userId, index) => {
+      colorsMap[userId] = generateUserColor(userId);
+      namesMap[userId] = `Player ${index + 1}`;
     });
 
     setParticipantNames(namesMap);
