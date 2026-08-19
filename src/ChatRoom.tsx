@@ -55,20 +55,22 @@ function ChatRoom({ chatroomId, currentUserId, onLeaveChat }: ChatRoomProps) {
   const generateFriendlyNames = (messages: Message[]) => {
     const namesMap: Record<string, string> = {};
     const colorsMap: Record<string, string> = {};
-    const allUserIds = new Set<string>([currentUserId]);
 
-    messages.forEach((message) => {
-      if (message.senderId) {
-        allUserIds.add(message.senderId);
-      }
+    // Sort by creation time so numbering follows who spoke first
+    const sortedMessages = [...messages].sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return aTime - bTime;
     });
 
-    // Sort IDs so every client assigns the same Player number to the same person
-    const sortedUserIds = Array.from(allUserIds).sort();
-
-    sortedUserIds.forEach((userId, index) => {
-      colorsMap[userId] = generateUserColor(userId);
-      namesMap[userId] = `Player ${index + 1}`;
+    // Assign Player 1, 2, 3... in order of first message
+    let playerNumber = 1;
+    sortedMessages.forEach((message) => {
+      const senderId = message.senderId;
+      if (senderId && !namesMap[senderId]) {
+        colorsMap[senderId] = generateUserColor(senderId);
+        namesMap[senderId] = `Player ${playerNumber++}`;
+      }
     });
 
     setParticipantNames(namesMap);
